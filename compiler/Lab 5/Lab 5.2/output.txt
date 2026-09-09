@@ -1,0 +1,7 @@
+
+ MOV R0,3
+ ADD R0,4
+ MOV R1,R0
+ MOV R0,5
+ MUL R0,6
+ MOV R2, R0
