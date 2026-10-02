@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order Placed</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding-top: 60px; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <h2 style="color: green;">✓ Order Placed & Saved to MySQL!</h2>
+  <p>Order successful! Redirecting back to products in <span id="sec">3</span> seconds...</p>
+  <a id="link" href="#">Click here if not redirected</a>
+
+  <script>
+    const nextUrl = 'products.html' + location.search;
+    document.getElementById('link').href = nextUrl;
+
+    let sec = 3;
+    const timer = setInterval(() => {
+      sec--;
+      document.getElementById('sec').innerText = sec;
+      if (sec <= 0) {
+        clearInterval(timer);
+        window.location.href = nextUrl;
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lab 3: Interactive Checkout (eSewa)</title>
+  <style>
+    body { font-family: sans-serif; display: grid; place-items: center; min-height: 90vh; background: #f8fafc; margin: 0; }
+    .card { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 20px; width: 300px; box-shadow: 0 2px 8px #0002; }
+    .steps, .btn-group { display: flex; }
+    .steps { justify-content: space-between; font-size: 13px; font-weight: bold; color: #888; margin-bottom: 15px; }
+    .step.active { color: #16a34a; border-bottom: 2px solid; padding-bottom: 4px; }
+    .step-panel:not(.active) { display: none; }
+    input, textarea, button { width: 100%; box-sizing: border-box; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin: 4px 0 10px; }
+    button { background: #16a34a; color: #fff; border: 0; cursor: pointer; font-weight: bold; flex: 1; padding: 10px; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-group { gap: 8px; margin-top: 10px; }
+    .back { background: #64748b; }
+    .sig { font-family: cursive; font-size: 20px; color: #16a34a; min-height: 24px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3 style="margin-top: 0;">Interactive Checkout</h3>
+
+    <div class="steps">
+      <span class="step active" id="s1">1. Address</span>
+      <span class="step" id="s2">2. eSewa</span>
+      <span class="step" id="s3">3. Review</span>
+    </div>
+
+    <!-- Step 1: Address & Email -->
+    <div class="step-panel active" id="p1">
+      Billing Address:
+      <textarea id="address" rows="2" placeholder="Min 5 characters" oninput="v1()"></textarea>
+      Email Address:
+      <input type="email" id="email" placeholder="name@domain.com" oninput="v1()">
+      <div class="btn-group">
+        <button id="b1" onclick="go(2)" disabled>Next: eSewa &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 2: eSewa ID -->
+    <div class="step-panel" id="p2">
+      eSewa ID (10 Digits):
+      <input id="esewa" maxlength="10" placeholder="98XXXXXXXX / 97XXXXXXXX" oninput="v2()">
+      <div class="btn-group">
+        <button class="back" onclick="go(1)">&larr; Back</button>
+        <button id="b2" onclick="go(3)" disabled>Next: Review &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Review & Signature -->
+    <div class="step-panel" id="p3">
+      <div style="font-size: 13px; line-height: 1.6; background: #f1f5f9; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+        <b>Address:</b> <span id="rAddr"></span><br>
+        <b>Email:</b> <span id="rEmail"></span><br>
+        <b>eSewa:</b> <span id="rEsewa"></span>
+      </div>
+      Email Signature:
+      <input id="signature" placeholder="Type name (min 3 chars)" oninput="v3()">
+      <div class="sig" id="sigPrev"></div>
+      <div class="btn-group">
+        <button class="back" onclick="go(2)">&larr; Back</button>
+        <button id="b3" onclick="submitOrder()" disabled>Confirm & Pay</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Success Screen -->
+    <div class="step-panel" id="p4" style="text-align: center;">
+      <h3 style="color: #16a34a;">✓ Payment Verified & Saved!</h3>
+      <p style="font-size: 13px; color: #555;">Saved into MySQL database.</p>
+      <button onclick="location.reload()">New Checkout</button>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    function go(step) {
+      for (let i = 1; i <= 4; i++) {
+        $('p' + i).classList.toggle('active', i === step);
+        if (i <= 3) $('s' + i).classList.toggle('active', i === step);
+      }
+      if (step === 3) {
+        $('rAddr').innerText = $('address').value;
+        $('rEmail').innerText = $('email').value;
+        $('rEsewa').innerText = $('esewa').value;
+      }
+    }
+
+    const v1 = () => $('b1').disabled = !($('address').value.trim().length >= 5 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim()));
+    const v2 = () => $('b2').disabled = !/^(98|97)\d{8}$/.test($('esewa').value.trim());
+    const v3 = () => {
+      const s = $('signature').value.trim();
+      $('sigPrev').innerText = s ? `✍ ${s}` : '';
+      $('b3').disabled = s.length < 3;
+    };
+
+    function submitOrder() {
+      fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: $('address').value,
+          email: $('email').value,
+          esewaId: $('esewa').value,
+          signature: $('signature').value
+        })
+      }).then(res => res.json()).then(() => go(4));
+    }
+  </script>
+</body>
+</html>
